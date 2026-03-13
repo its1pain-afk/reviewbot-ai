@@ -1,0 +1,138 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  plan          String    @default("FREE")
+  googleTokens  String?   // JSON string: { access_token, refresh_token, expiry_date }
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  locations     Location[]
+  botConfigs    BotConfig[]
+  accounts      Account[]
+  sessions      Session[]
+  subscription  Subscription?
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? // @db.Text
+  session_state     String?
+  refresh_token_expires_in Int?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Location {
+  id              String    @id @default(cuid())
+  userId          String
+  gmbAccountId    String
+  gmbLocationId   String
+  name            String
+  address         String?
+  phone           String?
+  website         String?
+  category        String?
+  isActive        Boolean   @default(true)
+  botEnabled      Boolean   @default(true)
+  totalReviews    Int       @default(0)
+  avgRating       Float     @default(0)
+  repliedCount    Int       @default(0)
+  lastSyncAt      DateTime?
+  createdAt       DateTime  @default(now())
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviews         Review[]
+  botConfig       BotConfig?
+
+  @@unique([userId, gmbLocationId])
+}
+
+model Review {
+  id              String    @id @default(cuid())
+  locationId      String
+  gmbReviewId     String    @unique
+  reviewerName    String
+  reviewerPhoto   String?
+  rating          Int
+  comment         String?
+  publishedAt     DateTime
+  replied         Boolean   @default(false)
+  replyText       String?
+  repliedAt       DateTime?
+  replyStatus     String    @default("PENDING")
+  aiGenerated     Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+
+  location        Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+}
+
+model BotConfig {
+  id                String    @id @default(cuid())
+  userId            String
+  locationId        String    @unique
+  businessName      String
+  businessType      String
+  dialect           String    @default("saudi")
+  tone              String    @default("warm")
+  replySpeed        String    @default("2h")
+  personality       String    @default("friendly")
+  includeEmoji      Boolean   @default(true)
+  signatureName     String?
+  fiveStar          String?
+  fourStar          String?
+  threeStar         String?
+  twoStar           String?
+  oneStar           String?
+  customContext     String?
+  forbiddenWords    String?
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user              User      @relation(fields: [userId], references: [id])
+  location          Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  plan            String
+  status          String    @default("ACTIVE")
+  locationsLimit  Int       @default(1)
+  currentPeriodEnd DateTime?
+  createdAt       DateTime  @default(now())
+
+  user            User      @relation(fields: [userId], references: [id])
+}

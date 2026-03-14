@@ -20,7 +20,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       DATABASE_URL: postgresql://reviewbot:${POSTGRES_PASSWORD}@postgres:5432/reviewbot
       DIRECT_URL: postgresql://reviewbot:${POSTGRES_PASSWORD}@postgres:5432/reviewbot

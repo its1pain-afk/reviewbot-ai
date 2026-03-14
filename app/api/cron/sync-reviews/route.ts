@@ -1,4 +1,5 @@
 // app/api/cron/sync-reviews/route.ts
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getReviews, parseRating } from "@/lib/gmb";

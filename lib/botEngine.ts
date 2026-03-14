@@ -4,10 +4,16 @@
 import OpenAI from "openai";
 import { BotConfig } from "@prisma/client";
 
-const openai = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY!,
-});
+let _openai: OpenAI | null = null;
+function getOpenAI() {
+  if (!_openai) {
+    _openai = new OpenAI({
+      baseURL: "https://openrouter.ai/api/v1",
+      apiKey: process.env.OPENROUTER_API_KEY!,
+    });
+  }
+  return _openai;
+}
 
 // ==============================
 // أنواع اللهجات
@@ -104,7 +110,7 @@ ${botConfig.signatureName ? `- **يجب** أن تختم الرد في سطر ج�
 
 اكتب رداً مناسباً:`;
 
-  const completion = await openai.chat.completions.create({
+  const completion = await getOpenAI().chat.completions.create({
     model: "google/gemini-2.0-flash-001", // Using stable paid gemini via openrouter
     messages: [
       { role: "system", content: systemMessage },

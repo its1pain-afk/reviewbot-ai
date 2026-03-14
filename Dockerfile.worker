@@ -1,0 +1,10 @@
+FROM node:20-alpine
+WORKDIR /app
+
+# Only need node-cron for the worker
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev
+
+COPY workers/ ./workers/
+
+CMD ["node", "workers/reviewWorker.js"]

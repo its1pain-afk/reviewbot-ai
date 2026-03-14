@@ -1,7 +1,17 @@
-// app/dashboard/page.tsx
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import {
+  Building2,
+  Star,
+  CheckCircle2,
+  Clock,
+  Plus,
+  Eye,
+  Settings2,
+  Inbox,
+  type LucideIcon,
+} from "lucide-react";
 
 interface Stats {
   totalLocations: number;
@@ -21,6 +31,18 @@ interface RecentReview {
   replied: boolean;
   publishedAt: string;
   location: { name: string };
+}
+
+const STAR_COLORS = ["", "#ef4444", "#f97316", "#fbbf24", "#86efac", "#22c55e"];
+
+function StarRow({ count, color }: { count: number; color: string }) {
+  return (
+    <span className="flex items-center gap-0.5" style={{ color }}>
+      {Array.from({ length: count }, (_, i) => (
+        <Star key={i} className="w-3 h-3 fill-current" />
+      ))}
+    </span>
+  );
 }
 
 export default function DashboardPage() {
@@ -65,35 +87,46 @@ export default function DashboardPage() {
     }
   }
 
-  const STAT_CARDS = stats
+  const STAT_CARDS: Array<{
+    label: string;
+    value: number;
+    Icon: LucideIcon;
+    color: string;
+    bg: string;
+    sub: string;
+  }> = stats
     ? [
         {
           label: "الفروع المرتبطة",
           value: stats.totalLocations,
-          icon: "🏢",
+          Icon: Building2,
           color: "var(--primary)",
+          bg: "rgba(108,99,255,0.12)",
           sub: `${stats.activeLocations} نشط`,
         },
         {
           label: "إجمالي التقييمات",
           value: stats.totalReviews,
-          icon: "⭐",
+          Icon: Star,
           color: "#f59e0b",
+          bg: "rgba(245,158,11,0.12)",
           sub: `معدل ${stats.avgRating.toFixed(1)} نجوم`,
         },
         {
           label: "ردود تلقائية",
           value: stats.repliedReviews,
-          icon: "✅",
+          Icon: CheckCircle2,
           color: "var(--accent)",
+          bg: "rgba(0,212,170,0.12)",
           sub: `${stats.replyRate.toFixed(0)}% معدل الرد`,
         },
         {
           label: "بانتظار الرد",
           value: stats.pendingReviews,
-          icon: "⏳",
+          Icon: Clock,
           color: stats.pendingReviews > 0 ? "#f97316" : "var(--accent)",
-          sub: stats.pendingReviews > 0 ? "ستُرد خلال ساعتين" : "كل شي مرتب 🎉",
+          bg: stats.pendingReviews > 0 ? "rgba(249,115,22,0.12)" : "rgba(0,212,170,0.12)",
+          sub: stats.pendingReviews > 0 ? "ستُرد خلال ساعتين" : "كل شي مرتب",
         },
       ]
     : [];
@@ -103,37 +136,31 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-black mb-2">لوحة التحكم</h1>
-        <p style={{ color: "var(--text-muted)" }}>
-          مرحباً! بوتك شغّال وجاهز للرد على التقييمات 🤖
-        </p>
+        <p style={{ color: "var(--text-muted)" }}>مرحباً! بوتك شغّال وجاهز للرد على التقييمات</p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {loading
-          ? Array(4)
-              .fill(0)
-              .map((_, i) => (
-                <div key={i} className="h-32 rounded-2xl skeleton" />
-              ))
+          ? Array(4).fill(0).map((_, i) => <div key={i} className="h-32 rounded-2xl skeleton" />)
           : STAT_CARDS.map((card) => (
               <div
                 key={card.label}
                 className="rounded-2xl p-5 glass hover:scale-[1.02] transition-transform"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <span className="text-3xl">{card.icon}</span>
                   <div
-                    className="text-3xl font-black"
-                    style={{ color: card.color }}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: card.bg }}
                   >
+                    <card.Icon className="w-5 h-5" style={{ color: card.color }} />
+                  </div>
+                  <div className="text-3xl font-black" style={{ color: card.color }}>
                     {card.value.toLocaleString("ar")}
                   </div>
                 </div>
                 <div className="font-semibold text-sm mb-1">{card.label}</div>
-                <div className="text-xs" style={{ color: "var(--text-muted)" }}>
-                  {card.sub}
-                </div>
+                <div className="text-xs" style={{ color: "var(--text-muted)" }}>{card.sub}</div>
               </div>
             ))}
       </div>
@@ -149,23 +176,26 @@ export default function DashboardPage() {
               className="text-sm transition-colors hover:text-white"
               style={{ color: "var(--primary)" }}
             >
-              عرض الكل ←
+              عرض الكل
             </Link>
           </div>
 
           {loading ? (
             <div className="space-y-3">
-              {Array(4).fill(0).map((_, i) => (
-                <div key={i} className="h-16 rounded-xl skeleton" />
-              ))}
+              {Array(4).fill(0).map((_, i) => <div key={i} className="h-16 rounded-xl skeleton" />)}
             </div>
           ) : recentReviews.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-4xl mb-3">📭</div>
-              <p style={{ color: "var(--text-muted)" }}>لا توجد تقييمات بعد</p>
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                style={{ background: "rgba(255,255,255,0.05)" }}
+              >
+                <Inbox className="w-7 h-7" style={{ color: "var(--text-muted)" }} />
+              </div>
+              <p className="mb-4" style={{ color: "var(--text-muted)" }}>لا توجد تقييمات بعد</p>
               <Link
                 href="/dashboard/locations"
-                className="inline-block mt-3 text-sm px-4 py-2 rounded-xl"
+                className="inline-block text-sm px-4 py-2 rounded-xl font-semibold"
                 style={{ background: "var(--primary)", color: "white" }}
               >
                 أضف فرعك الأول
@@ -179,21 +209,24 @@ export default function DashboardPage() {
                   className="flex items-start gap-3 p-4 rounded-xl transition-colors"
                   style={{ background: "rgba(255,255,255,0.03)" }}
                 >
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shrink-0"
-                    style={{ background: "var(--surface-3)" }}>
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+                    style={{
+                      background: `${STAR_COLORS[review.rating]}20`,
+                      color: STAR_COLORS[review.rating],
+                    }}
+                  >
                     {review.reviewerName[0]}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-sm truncate">
-                        {review.reviewerName}
-                      </span>
-                      <span className="text-xs shrink-0">
-                        {"⭐".repeat(review.rating)}
-                      </span>
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="font-semibold text-sm truncate">{review.reviewerName}</span>
+                      <StarRow count={review.rating} color={STAR_COLORS[review.rating]} />
                       {review.replied && (
-                        <span className="text-xs px-2 py-0.5 rounded-full shrink-0"
-                          style={{ background: "rgba(0,212,170,0.15)", color: "var(--accent)" }}>
+                        <span
+                          className="text-xs px-2 py-0.5 rounded-full shrink-0"
+                          style={{ background: "rgba(0,212,170,0.15)", color: "var(--accent)" }}
+                        >
                           تم الرد
                         </span>
                       )}
@@ -211,15 +244,15 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Quick actions */}
+        {/* Quick actions + Bot status */}
         <div className="lg:col-span-2 space-y-4">
           <div className="rounded-2xl glass p-6">
             <h2 className="text-lg font-bold mb-4">إجراءات سريعة</h2>
             <div className="space-y-3">
               {[
-                { href: "/dashboard/locations", icon: "➕", label: "إضافة فرع جديد", color: "var(--primary)" },
-                { href: "/dashboard/reviews", icon: "👀", label: "مراجعة التقييمات", color: "#f59e0b" },
-                { href: "/dashboard/bot", icon: "⚙️", label: "ضبط إعدادات البوت", color: "var(--accent)" },
+                { href: "/dashboard/locations", Icon: Plus, label: "إضافة فرع جديد", color: "var(--primary)", bg: "rgba(108,99,255,0.12)" },
+                { href: "/dashboard/reviews", Icon: Eye, label: "مراجعة التقييمات", color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
+                { href: "/dashboard/bot", Icon: Settings2, label: "ضبط إعدادات البوت", color: "var(--accent)", bg: "rgba(0,212,170,0.12)" },
               ].map((action) => (
                 <Link
                   key={action.href}
@@ -227,7 +260,12 @@ export default function DashboardPage() {
                   className="flex items-center gap-3 p-3 rounded-xl transition-all hover:scale-[1.02]"
                   style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)" }}
                 >
-                  <span className="text-2xl">{action.icon}</span>
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ background: action.bg }}
+                  >
+                    <action.Icon className="w-4 h-4" style={{ color: action.color }} />
+                  </div>
                   <span className="font-semibold text-sm">{action.label}</span>
                 </Link>
               ))}
@@ -235,8 +273,13 @@ export default function DashboardPage() {
           </div>
 
           {/* Bot status */}
-          <div className="rounded-2xl p-5"
-            style={{ background: "linear-gradient(135deg, rgba(108,99,255,0.15), rgba(0,212,170,0.1))", border: "1px solid rgba(108,99,255,0.3)" }}>
+          <div
+            className="rounded-2xl p-5"
+            style={{
+              background: "linear-gradient(135deg, rgba(108,99,255,0.15), rgba(0,212,170,0.1))",
+              border: "1px solid rgba(108,99,255,0.3)",
+            }}
+          >
             <div className="flex items-center gap-2 mb-2">
               <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: "var(--accent)" }} />
               <span className="font-bold text-sm">البوت شغّال</span>

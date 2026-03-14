@@ -1,0 +1,12 @@
+.git
+.gitignore
+.env
+.env.local
+.env*.local
+node_modules
+.next
+.vercel
+npm-debug.log*
+README.md
+CLAUDE.md
+.claude/

@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: reviewbot
+      POSTGRES_USER: reviewbot
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reviewbot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://reviewbot:${POSTGRES_PASSWORD}@postgres:5432/reviewbot
+      DIRECT_URL: postgresql://reviewbot:${POSTGRES_PASSWORD}@postgres:5432/reviewbot
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      NEXT_PUBLIC_APP_URL: ${NEXTAUTH_URL}
+      NEXT_PUBLIC_APP_NAME: ReviewBot AI
+      CRON_SECRET: ${CRON_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Run DB migrations before starting the server
+    command: >
+      sh -c "npx prisma migrate deploy && node server.js"
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_APP_URL: ${NEXTAUTH_URL}
+      CRON_SECRET: ${CRON_SECRET}
+    depends_on:
+      - app
+
+volumes:
+  postgres_data:

@@ -1,30 +1,60 @@
-// app/dashboard/bot/page.tsx
 "use client";
+import React from "react";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import {
+  Bot,
+  Building2,
+  MessageCircle,
+  Zap,
+  Star,
+  Ban,
+  Eye,
+  Save,
+  Smile,
+  Briefcase,
+  Sparkles,
+  Globe,
+  Loader2,
+  type LucideIcon,
+} from "lucide-react";
 
-const DIALECTS = [
-  { value: "saudi", label: "🇸🇦 سعودي", desc: "اللهجة السعودية البيضاء" },
-  { value: "gulf", label: "🌊 خليجي", desc: "لهجة خليجية عامة" },
-  { value: "levant", label: "🌿 شامي", desc: "لبناني / سوري / أردني" },
-  { value: "egyptian", label: "🏛 مصري", desc: "اللهجة المصرية" },
-  { value: "msa", label: "📖 فصحى", desc: "العربية الفصحى البسيطة" },
+const DIALECTS: Array<{ value: string; flagCode: string | null; label: string; desc: string }> = [
+  { value: "saudi", flagCode: "sa", label: "سعودي", desc: "اللهجة السعودية البيضاء" },
+  { value: "gulf", flagCode: "ae", label: "خليجي", desc: "لهجة خليجية عامة" },
+  { value: "levant", flagCode: "sy", label: "شامي", desc: "لبناني / سوري / أردني" },
+  { value: "egyptian", flagCode: "eg", label: "مصري", desc: "اللهجة المصرية" },
+  { value: "msa", flagCode: null, label: "فصحى", desc: "العربية الفصحى البسيطة" },
 ];
 
-const PERSONALITIES = [
-  { value: "friendly", label: "😊 ودود ودافئ" },
-  { value: "professional", label: "💼 محترف ورسمي" },
-  { value: "luxury", label: "✨ فاخر ومتميز" },
+const PERSONALITIES: Array<{ value: string; Icon: LucideIcon; label: string }> = [
+  { value: "friendly", Icon: Smile, label: "ودود ودافئ" },
+  { value: "professional", Icon: Briefcase, label: "محترف ورسمي" },
+  { value: "luxury", Icon: Sparkles, label: "فاخر ومتميز" },
 ];
 
 const REPLY_SPEEDS = [
-  { value: "instant", label: "فوري ⚡" },
+  { value: "instant", label: "فوري" },
   { value: "30m", label: "30 دقيقة" },
   { value: "1h", label: "ساعة" },
   { value: "2h", label: "ساعتين (موصى به)" },
   { value: "6h", label: "6 ساعات" },
   { value: "24h", label: "24 ساعة" },
 ];
+
+const STAR_INSTRUCTION_COLORS = ["", "#ef4444", "#f97316", "#fbbf24", "#86efac", "#22c55e"];
+
+const STAR_INSTRUCTIONS: Array<{
+  key: "fiveStar" | "fourStar" | "threeStar" | "twoStar" | "oneStar";
+  stars: number;
+  placeholder: string;
+}> = [
+    { key: "fiveStar", stars: 5, placeholder: "مثال: اشكر العميل بحرارة وادعوه للعودة قريباً" },
+    { key: "fourStar", stars: 4, placeholder: "مثال: اشكره واسأل عن نقطة تحسين واحدة" },
+    { key: "threeStar", stars: 3, placeholder: "اتركه فارغاً للإعداد الافتراضي" },
+    { key: "twoStar", stars: 2, placeholder: "مثال: اعتذر وعد بالتحسين" },
+    { key: "oneStar", stars: 1, placeholder: "مثال: اعتذر بصدق وادعوه للتواصل المباشر" },
+  ];
 
 interface Location {
   id: string;
@@ -57,7 +87,6 @@ export default function BotSettingsPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Preview state
   const [previewRating, setPreviewRating] = useState(5);
   const [previewComment, setPreviewComment] = useState("الخدمة كانت رائعة جداً!");
   const [previewReply, setPreviewReply] = useState("");
@@ -68,9 +97,7 @@ export default function BotSettingsPage() {
       .then((r) => r.json())
       .then(({ locations }) => {
         setLocations(locations || []);
-        if (locations?.length > 0) {
-          setSelectedLocation(locations[0].id);
-        }
+        if (locations?.length > 0) setSelectedLocation(locations[0].id);
       });
   }, []);
 
@@ -79,9 +106,7 @@ export default function BotSettingsPage() {
     setLoading(true);
     fetch(`/api/bot-config/${selectedLocation}`)
       .then((r) => r.json())
-      .then(({ config }) => {
-        setConfig(config || getDefaultConfig());
-      })
+      .then(({ config }) => setConfig(config || getDefaultConfig()))
       .finally(() => setLoading(false));
   }, [selectedLocation]);
 
@@ -116,7 +141,7 @@ export default function BotSettingsPage() {
         body: JSON.stringify(config),
       });
       if (res.ok) {
-        toast.success("تم حفظ الإعدادات ✅");
+        toast.success("تم حفظ الإعدادات");
       } else {
         toast.error("فشل الحفظ");
       }
@@ -149,17 +174,20 @@ export default function BotSettingsPage() {
   }
 
   const updateConfig = (key: keyof BotConfig, value: any) => {
-    setConfig((prev) => prev ? { ...prev, [key]: value } : prev);
+    setConfig((prev) => (prev ? { ...prev, [key]: value } : prev));
   };
 
   if (locations.length === 0) {
     return (
       <div className="text-center py-20">
-        <div className="text-5xl mb-4">🤖</div>
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+          style={{ background: "rgba(108,99,255,0.12)" }}
+        >
+          <Bot className="w-8 h-8" style={{ color: "var(--primary)" }} />
+        </div>
         <h2 className="text-xl font-bold mb-2">لا توجد فروع مرتبطة</h2>
-        <p style={{ color: "var(--text-muted)" }}>
-          أضف فرعاً أولاً من صفحة الفروع
-        </p>
+        <p style={{ color: "var(--text-muted)" }}>أضف فرعاً أولاً من صفحة الفروع</p>
       </div>
     );
   }
@@ -221,7 +249,7 @@ export default function BotSettingsPage() {
           </div>
 
           {/* Business Info */}
-          <Section title="معلومات المنشأة" icon="🏢">
+          <Section title="معلومات المنشأة" icon={<Building2 className="w-5 h-5 text-indigo-400" />}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Field label="اسم المنشأة">
                 <input
@@ -242,30 +270,49 @@ export default function BotSettingsPage() {
               <textarea
                 value={config.customContext}
                 onChange={(e) => updateConfig("customContext", e.target.value)}
-                placeholder="مثال: نقدم المأكولات البحرية الطازجة، نفتح من 12 ظهراً حتى منتصف الليل، لدينا فروع في الرياض وجدة والدمام"
+                placeholder="مثال: نقدم المأكولات البحرية الطازجة، نفتح من 12 ظهراً حتى منتصف الليل"
                 rows={3}
               />
             </Field>
           </Section>
 
           {/* Dialect & Personality */}
-          <Section title="اللهجة والشخصية" icon="🗣️">
+          <Section title="اللهجة والشخصية" icon={<MessageCircle className="w-5 h-5 text-purple-400" />}>
             <div>
               <label className="text-sm font-semibold mb-3 block">اللهجة</label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {DIALECTS.map((d) => (
+                {DIALECTS.map(({ value, flagCode, label, desc }) => (
                   <button
-                    key={d.value}
-                    onClick={() => updateConfig("dialect", d.value)}
-                    className="p-3 rounded-xl text-right transition-all"
+                    key={value}
+                    onClick={() => updateConfig("dialect", value)}
+                    className="p-3 rounded-xl text-right transition-all flex items-start gap-2"
                     style={{
-                      background: config.dialect === d.value ? "var(--primary)" : "var(--surface-3)",
-                      border: config.dialect === d.value ? "1px solid var(--primary)" : "1px solid transparent",
+                      background: config.dialect === value ? "var(--primary)" : "var(--surface-3)",
+                      border: config.dialect === value ? "1px solid var(--primary)" : "1px solid transparent",
                     }}
                   >
-                    <div className="font-bold text-sm">{d.label}</div>
-                    <div className="text-xs mt-0.5" style={{ color: config.dialect === d.value ? "rgba(255,255,255,0.7)" : "var(--text-muted)" }}>
-                      {d.desc}
+                    <span className="shrink-0 mt-0.5">
+                      {flagCode ? (
+                        <img
+                          src={`https://flagcdn.com/w40/${flagCode}.png`}
+                          alt={label}
+                          width={22}
+                          height={16}
+                          className="rounded-sm object-cover"
+                          style={{ width: 22, height: 16 }}
+                        />
+                      ) : (
+                        <Globe className="w-5 h-5" />
+                      )}
+                    </span>
+                    <div>
+                      <div className="font-bold text-sm">{label}</div>
+                      <div
+                        className="text-xs mt-0.5"
+                        style={{ color: config.dialect === value ? "rgba(255,255,255,0.7)" : "var(--text-muted)" }}
+                      >
+                        {desc}
+                      </div>
                     </div>
                   </button>
                 ))}
@@ -275,26 +322,30 @@ export default function BotSettingsPage() {
             <div className="mt-4">
               <label className="text-sm font-semibold mb-3 block">الشخصية</label>
               <div className="grid grid-cols-3 gap-2">
-                {PERSONALITIES.map((p) => (
+                {PERSONALITIES.map(({ value, Icon, label }) => (
                   <button
-                    key={p.value}
-                    onClick={() => updateConfig("personality", p.value)}
-                    className="p-3 rounded-xl font-semibold text-sm transition-all"
+                    key={value}
+                    onClick={() => updateConfig("personality", value)}
+                    className="flex items-center justify-center gap-2 p-3 rounded-xl font-semibold text-sm transition-all"
                     style={{
-                      background: config.personality === p.value ? "var(--primary)" : "var(--surface-3)",
+                      background: config.personality === value ? "var(--primary)" : "var(--surface-3)",
                     }}
                   >
-                    {p.label}
+                    <Icon className="w-4 h-4" />
+                    {label}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="mt-4 flex items-center justify-between p-4 rounded-xl" style={{ background: "var(--surface-3)" }}>
+            <div
+              className="mt-4 flex items-center justify-between p-4 rounded-xl"
+              style={{ background: "var(--surface-3)" }}
+            >
               <div>
-                <div className="font-semibold">الإيموجيات 😊</div>
+                <div className="font-semibold">الإيموجيات في الردود</div>
                 <div className="text-xs" style={{ color: "var(--text-muted)" }}>
-                  إضافة إيموجيات في الردود
+                  إضافة رموز تعبيرية في نص الرد
                 </div>
               </div>
               <button
@@ -302,14 +353,16 @@ export default function BotSettingsPage() {
                 className="relative w-12 h-6 rounded-full transition-colors"
                 style={{ background: config.includeEmoji ? "var(--accent)" : "var(--surface-2)" }}
               >
-                <div className="absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all"
-                  style={{ right: config.includeEmoji ? "0.375rem" : "auto", left: config.includeEmoji ? "auto" : "0.375rem" }} />
+                <div
+                  className="absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all"
+                  style={{ right: config.includeEmoji ? "0.375rem" : "auto", left: config.includeEmoji ? "auto" : "0.375rem" }}
+                />
               </button>
             </div>
           </Section>
 
           {/* Reply Speed */}
-          <Section title="سرعة الرد" icon="⚡">
+          <Section title="سرعة الرد" icon={<Zap className="w-5 h-5 text-yellow-400" />}>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
               {REPLY_SPEEDS.map((s) => (
                 <button
@@ -327,29 +380,39 @@ export default function BotSettingsPage() {
           </Section>
 
           {/* Star Instructions */}
-          <Section title="تعليمات الرد حسب التقييم" icon="⭐">
+          <Section title="تعليمات الرد حسب التقييم" icon={<Star className="w-5 h-5 text-amber-400" />}>
             <p className="text-xs mb-4" style={{ color: "var(--text-muted)" }}>
               اترك فارغاً لاستخدام الإعدادات الافتراضية
             </p>
-            {[
-              { key: "fiveStar" as keyof BotConfig, label: "⭐⭐⭐⭐⭐ 5 نجوم", placeholder: "مثال: اشكر العميل بحرارة وادعوه للعودة قريباً" },
-              { key: "fourStar" as keyof BotConfig, label: "⭐⭐⭐⭐ 4 نجوم", placeholder: "مثال: اشكره واسأل عن نقطة تحسين واحدة" },
-              { key: "threeStar" as keyof BotConfig, label: "⭐⭐⭐ 3 نجوم", placeholder: "" },
-              { key: "twoStar" as keyof BotConfig, label: "⭐⭐ 2 نجوم", placeholder: "مثال: اعتذر وعد بالتحسين" },
-              { key: "oneStar" as keyof BotConfig, label: "⭐ نجمة واحدة", placeholder: "مثال: اعتذر بصدق وادعوه للتواصل المباشر" },
-            ].map((item) => (
-              <Field key={item.key} label={item.label}>
+            {STAR_INSTRUCTIONS.map((item) => (
+              <Field
+                key={item.key}
+                label={
+                  <span className="flex items-center gap-1.5">
+                    {Array.from({ length: item.stars }, (_, i) => (
+                      <Star
+                        key={i}
+                        className="w-3.5 h-3.5 fill-current"
+                        style={{ color: STAR_INSTRUCTION_COLORS[item.stars] }}
+                      />
+                    ))}
+                    <span style={{ color: STAR_INSTRUCTION_COLORS[item.stars] }}>
+                      {item.stars} نجوم
+                    </span>
+                  </span>
+                }
+              >
                 <input
                   value={(config[item.key] as string) || ""}
                   onChange={(e) => updateConfig(item.key, e.target.value)}
-                  placeholder={item.placeholder || "اتركه فارغاً للإعداد الافتراضي"}
+                  placeholder={item.placeholder}
                 />
               </Field>
             ))}
           </Section>
 
           {/* Forbidden words */}
-          <Section title="كلمات ممنوعة" icon="🚫">
+          <Section title="كلمات ممنوعة" icon={<Ban className="w-5 h-5 text-red-400" />}>
             <Field label="كلمات لا تريد أن يستخدمها البوت (مفصولة بفاصلة)">
               <input
                 value={config.forbiddenWords}
@@ -360,7 +423,7 @@ export default function BotSettingsPage() {
           </Section>
 
           {/* Preview Section */}
-          <Section title="معاينة الرد" icon="👁️">
+          <Section title="معاينة الرد" icon={<Eye className="w-5 h-5 text-teal-400" />}>
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-semibold mb-2 block">التقييم</label>
@@ -369,12 +432,13 @@ export default function BotSettingsPage() {
                     <button
                       key={r}
                       onClick={() => setPreviewRating(r)}
-                      className="w-10 h-10 rounded-xl text-lg font-bold transition-all"
+                      className="flex items-center gap-1 w-12 h-10 rounded-xl justify-center font-bold transition-all"
                       style={{
-                        background: previewRating === r ? "var(--primary)" : "var(--surface-3)",
+                        background: previewRating === r ? STAR_INSTRUCTION_COLORS[r] : "var(--surface-3)",
                       }}
                     >
-                      {r}⭐
+                      <Star className={`w-3.5 h-3.5 ${previewRating === r ? "fill-white text-white" : ""}`} />
+                      <span className="text-xs">{r}</span>
                     </button>
                   ))}
                 </div>
@@ -389,18 +453,26 @@ export default function BotSettingsPage() {
               <button
                 onClick={generatePreview}
                 disabled={previewing}
-                className="px-5 py-3 rounded-xl font-bold flex items-center gap-2 transition-all hover:scale-[1.02]"
+                className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold transition-all hover:scale-[1.02]"
                 style={{ background: "linear-gradient(135deg, var(--accent), #00b890)" }}
               >
                 {previewing ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : "✨"}
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Sparkles className="w-5 h-5" />
+                )}
                 {previewing ? "جاري التوليد..." : "جرّب البوت"}
               </button>
               {previewReply && (
-                <div className="p-4 rounded-xl" style={{ background: "rgba(0,212,170,0.1)", border: "1px solid rgba(0,212,170,0.3)" }}>
-                  <div className="text-xs font-semibold mb-2" style={{ color: "var(--accent)" }}>
-                    رد البوت:
+                <div
+                  className="p-4 rounded-xl"
+                  style={{ background: "rgba(0,212,170,0.1)", border: "1px solid rgba(0,212,170,0.3)" }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <Bot className="w-4 h-4" style={{ color: "var(--accent)" }} />
+                    <span className="text-xs font-semibold" style={{ color: "var(--accent)" }}>
+                      رد البوت
+                    </span>
                   </div>
                   <p className="text-sm leading-relaxed">{previewReply}</p>
                 </div>
@@ -412,15 +484,17 @@ export default function BotSettingsPage() {
           <button
             onClick={saveConfig}
             disabled={saving}
-            className="w-full py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-lg transition-all hover:scale-[1.01]"
             style={{
               background: "linear-gradient(135deg, var(--primary), #8b5cf6)",
               boxShadow: "0 8px 32px var(--primary-glow)",
             }}
           >
             {saving ? (
-              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : "💾"}
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : (
+              <Save className="w-6 h-6" />
+            )}
             {saving ? "جاري الحفظ..." : "حفظ الإعدادات"}
           </button>
         </div>
@@ -429,11 +503,19 @@ export default function BotSettingsPage() {
   );
 }
 
-function Section({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
+function Section({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <div className="rounded-2xl p-6 glass">
       <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-        <span>{icon}</span>
+        {icon}
         {title}
       </h3>
       <div className="space-y-4">{children}</div>
@@ -441,7 +523,13 @@ function Section({ title, icon, children }: { title: string; icon: string; child
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactElement }) {
+function Field({
+  label,
+  children,
+}: {
+  label: React.ReactNode;
+  children: React.ReactElement;
+}) {
   const inputStyle = {
     width: "100%",
     padding: "10px 14px",
@@ -456,13 +544,10 @@ function Field({ label, children }: { label: string; children: React.ReactElemen
 
   return (
     <div>
-      <label className="text-sm font-semibold mb-2 block" style={{ color: "rgba(255,255,255,0.8)" }}>
+      <label className="text-sm font-semibold mb-2 flex items-center gap-1" style={{ color: "rgba(255,255,255,0.8)" }}>
         {label}
       </label>
       {React.cloneElement(children, { style: { ...inputStyle, ...(children.props.style || {}) } })}
     </div>
   );
 }
-
-// Need React import for cloneElement
-import React from "react";

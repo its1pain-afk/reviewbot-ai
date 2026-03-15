@@ -10,6 +10,7 @@ import {
   Eye,
   Settings2,
   Inbox,
+  MessageSquare,
   type LucideIcon,
 } from "lucide-react";
 
@@ -21,6 +22,7 @@ interface Stats {
   pendingReviews: number;
   avgRating: number;
   replyRate: number;
+  unreadMessages: number;
 }
 
 interface RecentReview {
@@ -56,12 +58,22 @@ export default function DashboardPage() {
 
   async function fetchDashboardData() {
     try {
-      const [locRes, revRes] = await Promise.all([
+      const [locRes, revRes, inboxRes] = await Promise.all([
         fetch("/api/locations"),
         fetch("/api/reviews?limit=5"),
+        fetch("/api/inbox/conversations?status=active").catch(() => null),
       ]);
       const { locations } = await locRes.json();
       const { reviews } = await revRes.json();
+
+      let unreadMessages = 0;
+      if (inboxRes?.ok) {
+        const inboxData = await inboxRes.json();
+        unreadMessages = (inboxData.conversations || []).reduce(
+          (s: number, c: any) => s + (c.unreadCount || 0),
+          0
+        );
+      }
 
       const totalReviews = locations.reduce((s: number, l: any) => s + l.totalReviews, 0);
       const repliedReviews = locations.reduce((s: number, l: any) => s + l.repliedCount, 0);
@@ -78,6 +90,7 @@ export default function DashboardPage() {
         pendingReviews: totalReviews - repliedReviews,
         avgRating,
         replyRate: totalReviews > 0 ? (repliedReviews / totalReviews) * 100 : 0,
+        unreadMessages,
       });
       setRecentReviews(reviews || []);
     } catch (e) {
@@ -128,6 +141,14 @@ export default function DashboardPage() {
           bg: stats.pendingReviews > 0 ? "rgba(249,115,22,0.12)" : "rgba(0,212,170,0.12)",
           sub: stats.pendingReviews > 0 ? "ستُرد خلال ساعتين" : "كل شي مرتب",
         },
+        {
+          label: "رسائل جديدة",
+          value: stats.unreadMessages,
+          Icon: MessageSquare,
+          color: "#3b82f6",
+          bg: "rgba(59,130,246,0.12)",
+          sub: stats.unreadMessages > 0 ? "في صندوق الوارد" : "لا رسائل جديدة",
+        },
       ]
     : [];
 
@@ -140,9 +161,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         {loading
-          ? Array(4).fill(0).map((_, i) => <div key={i} className="h-32 rounded-2xl skeleton" />)
+          ? Array(5).fill(0).map((_, i) => <div key={i} className="h-32 rounded-2xl skeleton" />)
           : STAT_CARDS.map((card) => (
               <div
                 key={card.label}
@@ -253,6 +274,7 @@ export default function DashboardPage() {
                 { href: "/dashboard/locations", Icon: Plus, label: "إضافة فرع جديد", color: "var(--primary)", bg: "rgba(108,99,255,0.12)" },
                 { href: "/dashboard/reviews", Icon: Eye, label: "مراجعة التقييمات", color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
                 { href: "/dashboard/bot", Icon: Settings2, label: "ضبط إعدادات البوت", color: "var(--accent)", bg: "rgba(0,212,170,0.12)" },
+                { href: "/dashboard/inbox", Icon: MessageSquare, label: "صندوق الوارد", color: "#3b82f6", bg: "rgba(59,130,246,0.12)" },
               ].map((action) => (
                 <Link
                   key={action.href}

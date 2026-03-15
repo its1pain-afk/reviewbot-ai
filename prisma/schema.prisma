@@ -17,14 +17,18 @@ model User {
   image         String?
   plan          String    @default("FREE")
   googleTokens  String?   // JSON string: { access_token, refresh_token, expiry_date }
+  lateProfileId String?   // Late.dev profile ID for unified inbox
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  locations     Location[]
-  botConfigs    BotConfig[]
-  accounts      Account[]
-  sessions      Session[]
-  subscription  Subscription?
+  locations      Location[]
+  botConfigs     BotConfig[]
+  accounts       Account[]
+  sessions       Session[]
+  subscription   Subscription?
+  socialAccounts SocialAccount[]
+  knowledgeBase  KnowledgeBase[]
+  inboxBotConfig InboxBotConfig?
 }
 
 model Account {
@@ -135,4 +139,91 @@ model Subscription {
   createdAt       DateTime  @default(now())
 
   user            User      @relation(fields: [userId], references: [id])
+}
+
+// ─── Late.dev Unified Inbox Models ────────────────────────────────
+
+model SocialAccount {
+  id            String         @id @default(cuid())
+  userId        String
+  platform      String         // "whatsapp" | "messenger" | "instagram" | "x"
+  lateAccountId String         @unique
+  accountName   String
+  accountAvatar String?
+  isActive      Boolean        @default(true)
+  connectedAt   DateTime       @default(now())
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+
+  @@unique([userId, platform, lateAccountId])
+}
+
+model Conversation {
+  id                 String        @id @default(cuid())
+  socialAccountId    String
+  lateConversationId String        @unique
+  platform           String        // denormalized for filtering
+  contactName        String
+  contactAvatar      String?
+  contactId          String?
+  lastMessageText    String?
+  lastMessageAt      DateTime?
+  unreadCount        Int           @default(0)
+  status             String        @default("active") // "active" | "archived"
+  autoReplyEnabled   Boolean       @default(false)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  socialAccount      SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+  messages           Message[]
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  lateMessageId  String       @unique
+  direction      String       // "inbound" | "outbound"
+  content        String
+  contentType    String       @default("text") // "text" | "image" | "video" | "audio" | "file"
+  mediaUrl       String?
+  replyStatus    String       @default("NONE") // NONE | PENDING | PROCESSING | SENT | FAILED
+  aiGenerated    Boolean      @default(false)
+  sentAt         DateTime
+  createdAt      DateTime     @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model KnowledgeBase {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  content   String
+  category  String   @default("general") // "faq" | "product" | "policy" | "general"
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model InboxBotConfig {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  isActive       Boolean  @default(true)
+  replyMode      String   @default("manual") // "auto" | "manual"
+  dialect        String   @default("saudi")
+  personality    String   @default("friendly")
+  includeEmoji   Boolean  @default(true)
+  signatureName  String?
+  businessName   String?
+  businessType   String?
+  forbiddenWords String?
+  maxReplyLength Int      @default(150)
+  autoReplyDelay Int      @default(5)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User     @relation(fields: [userId], references: [id])
 }

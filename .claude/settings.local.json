@@ -3,7 +3,13 @@
     "allow": [
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(find /c/Users/User/Desktop/reviewbot-ai/components -type f \\\\\\(-name *.ts -o -name *.tsx \\\\\\))",
+      "WebFetch(domain:docs.getlate.dev)",
+      "Bash(find c:UsersUserDesktopreviewbot-ai -type f \\\\\\(-name *.test.ts -o -name *.test.tsx -o -name *.spec.ts -o -name *.spec.tsx \\\\\\))",
+      "Bash(npm run:*)",
+      "WebFetch(domain:getlate.dev)",
+      "WebFetch(domain:api.getlate.dev)"
     ]
   }
 }

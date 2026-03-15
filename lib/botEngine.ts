@@ -1,50 +1,12 @@
 // lib/botEngine.ts
 // محرك الذكاء الاصطناعي لتوليد الردود - OpenRouter
 
-import OpenAI from "openai";
 import { BotConfig } from "@prisma/client";
-
-let _openai: OpenAI | null = null;
-function getOpenAI() {
-  if (!_openai) {
-    _openai = new OpenAI({
-      baseURL: "https://openrouter.ai/api/v1",
-      apiKey: process.env.OPENROUTER_API_KEY!,
-    });
-  }
-  return _openai;
-}
-
-// ==============================
-// أنواع اللهجات
-// ==============================
-const DIALECT_INSTRUCTIONS: Record<string, string> = {
-  saudi: `
-    - استخدم اللهجة السعودية البيضاء الأصيلة
-    - كلمات مثل: يهلا، مرحبا، شكراً، نتشرف، يسعدنا، تسلم، والله، ما قصّر
-    - تجنب العربية الفصحى المتكلفة
-    - النبرة دافئة وكريمة كما هو متعارف عليه في الضيافة السعودية
-  `,
-  gulf: `
-    - استخدم اللهجة الخليجية العامة
-    - كلمات مثل: هلا، مرحبا، شكراً، يسعدنا، تسلم، إن شاء الله
-    - النبرة محترمة وودية
-  `,
-  levant: `
-    - استخدم اللهجة الشامية (لبنانية/سورية/فلسطينية/أردنية)
-    - كلمات مثل: يسلمو، مرسي، كتير، هيدا، متشكرين
-    - النبرة حارة ومرحة
-  `,
-  egyptian: `
-    - استخدم اللهجة المصرية
-    - كلمات مثل: شكراً جزيلاً، يارب، تسلم، حبيبي، إزيك
-    - النبرة ودية ومريحة
-  `,
-  msa: `
-    - استخدم العربية الفصحى البسيطة
-    - أسلوب رسمي ومهني
-  `,
-};
+import {
+  getOpenAI,
+  DIALECT_INSTRUCTIONS,
+  getPersonalityDescription,
+} from "./ai-shared";
 
 // ==============================
 // تعليمات حسب التقييم
@@ -136,15 +98,6 @@ function getStarInstructions(rating: number, botConfig: BotConfig): string {
   };
 
   return customMap[rating] || DEFAULT_STAR_INSTRUCTIONS[rating] || DEFAULT_STAR_INSTRUCTIONS[3];
-}
-
-function getPersonalityDescription(personality: string): string {
-  const descriptions: Record<string, string> = {
-    friendly: "ودود ودافئ، تتعامل مع العملاء كأصدقاء",
-    professional: "محترف ورسمي، تحافظ على مستوى راقٍ من الاحترافية",
-    luxury: "فاخر ومتميز، أسلوبك يعكس تجربة فاخرة لا مثيل لها",
-  };
-  return descriptions[personality] || descriptions.friendly;
 }
 
 // ==============================

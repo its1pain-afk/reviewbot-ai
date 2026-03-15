@@ -13,6 +13,9 @@ import {
   Menu,
   LogOut,
   X,
+  MessageSquare,
+  BookOpen,
+  Share2,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -20,6 +23,9 @@ const NAV_ITEMS = [
   { href: "/dashboard/locations", Icon: Building2, label: "الفروع" },
   { href: "/dashboard/reviews", Icon: Star, label: "التقييمات" },
   { href: "/dashboard/bot", Icon: Settings2, label: "إعدادات البوت" },
+  { href: "/dashboard/inbox", Icon: MessageSquare, label: "صندوق الوارد" },
+  { href: "/dashboard/knowledge-base", Icon: BookOpen, label: "قاعدة المعرفة" },
+  { href: "/dashboard/social-accounts", Icon: Share2, label: "الحسابات الاجتماعية" },
   { href: "/dashboard/analytics", Icon: TrendingUp, label: "التحليلات" },
 ];
 

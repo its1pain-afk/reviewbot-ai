@@ -32,6 +32,9 @@ services:
       NEXT_PUBLIC_APP_URL: ${NEXTAUTH_URL}
       NEXT_PUBLIC_APP_NAME: ReviewBot AI
       CRON_SECRET: ${CRON_SECRET}
+      LATE_API_KEY: ${LATE_API_KEY}
+      LATE_API_BASE_URL: ${LATE_API_BASE_URL}
+      LATE_WEBHOOK_SECRET: ${LATE_WEBHOOK_SECRET}
     depends_on:
       postgres:
         condition: service_healthy

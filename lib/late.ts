@@ -21,6 +21,7 @@ async function lateRequest<T>(
 ): Promise<T> {
   const url = `${LATE_BASE_URL}${path}`;
   const response = await fetch(url, {
+    cache: "no-store",
     ...options,
     headers: {
       ...getHeaders(),

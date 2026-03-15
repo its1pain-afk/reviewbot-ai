@@ -375,7 +375,7 @@ export default function InboxPage() {
                         className="absolute -bottom-0.5 -left-0.5 text-xs"
                         title={platform?.label}
                       >
-                        {platform?.icon}
+                        <MiniPlatformIcon id={conv.platform} />
                       </span>
                     </div>
 

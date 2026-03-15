@@ -29,35 +29,50 @@ export async function GET(req: NextRequest) {
       code,
       state: state || undefined,
     });
+    console.log("[Callback] Late OAuth result:", JSON.stringify(result));
 
     // جلب بيانات الحساب المربوط
-    const { accounts } = await getConnectedAccounts();
+    const accountsData = await getConnectedAccounts();
+    const accounts = accountsData.accounts || [];
+    console.log("[Callback] Connected accounts length:", accounts.length);
+    
+    const accountIdToFind = result.accountId || (result as any).account?._id || (result as any).account?.id;
     const connectedAccount = accounts.find(
-      (a) => a.id === result.accountId
-    );
+      (a: any) => a.id === accountIdToFind
+    ) as any;
 
     if (connectedAccount) {
+      console.log("[Callback] Found account to connect:", connectedAccount.id);
+      
+      const accountName = connectedAccount.name || connectedAccount.displayName || connectedAccount.username || "حساب اجتماعي";
+      const accountAvatar = connectedAccount.avatar || connectedAccount.profilePicture || null;
+
       // حفظ الحساب في قاعدة البيانات
       await prisma.socialAccount.upsert({
         where: { lateAccountId: connectedAccount.id },
         update: {
-          accountName: connectedAccount.name,
-          accountAvatar: connectedAccount.avatar,
+          accountName,
+          accountAvatar,
           isActive: true,
         },
         create: {
           userId: session.user.id,
           platform: connectedAccount.platform,
           lateAccountId: connectedAccount.id,
-          accountName: connectedAccount.name,
-          accountAvatar: connectedAccount.avatar,
+          accountName,
+          accountAvatar,
         },
       });
-    }
 
-    return NextResponse.redirect(
-      new URL("/dashboard/social-accounts?connected=true", req.url)
-    );
+      return NextResponse.redirect(
+        new URL("/dashboard/social-accounts?connected=true", req.url)
+      );
+    } else {
+      console.error("[Callback] Account not found in connected accounts list! Expected ID:", accountIdToFind);
+      return NextResponse.redirect(
+        new URL("/dashboard/social-accounts?error=callback_failed", req.url)
+      );
+    }
   } catch (error) {
     console.error("فشل إتمام ربط الحساب:", error);
     return NextResponse.redirect(
